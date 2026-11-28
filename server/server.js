@@ -7,6 +7,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+// Let the browser open uploaded photos, e.g. /uploads/123.jpg
+app.use('/uploads', express.static('uploads'));
 
 app.get('/', (req, res) => res.send('API is running'));
 app.use('/api/auth', require('./routes/authRoutes'));

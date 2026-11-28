@@ -105,6 +105,20 @@ export default function OwnerDashboard() {
     loadBoardings();
   };
 
+  // Upload photos for one boarding
+  const handleUpload = async (id, files) => {
+    if (!files || files.length === 0) return;
+    const data = new FormData();
+    for (const file of files) data.append('images', file);
+    try {
+      await axios.post(`${API}/${id}/images`, data, authHeader);
+      setMessage('Photos uploaded.');
+      loadBoardings();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Upload failed');
+    }
+  };
+
   const input = { display: 'block', width: '100%', marginBottom: 10, padding: 8 };
 
   return (
@@ -148,6 +162,28 @@ export default function OwnerDashboard() {
           <strong>{b.title}</strong> | Rs. {b.price} | {b.address}
           <p style={{ margin: '6px 0' }}>Status: {b.status}</p>
           {b.status === 'rejected' && <p>Reason: {b.rejectionReason}</p>}
+
+          {/* Show the uploaded photos */}
+          <div style={{ marginBottom: 8 }}>
+            {b.images?.map((img) => (
+              <img
+                key={img}
+                src={`http://localhost:5000${img}`}
+                alt="boarding"
+                style={{ width: 80, height: 80, objectFit: 'cover', marginRight: 6, borderRadius: 4 }}
+              />
+            ))}
+          </div>
+
+          {/* Choose photos to upload (max 5 at a time) */}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => handleUpload(b._id, e.target.files)}
+            style={{ display: 'block', marginBottom: 8 }}
+          />
+
           <button onClick={() => startEdit(b)} style={{ marginRight: 8 }}>
             Edit
           </button>

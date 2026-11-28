@@ -95,6 +95,15 @@ export default function Boardings() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
         {boardings.map((b) => (
           <div key={b._id} style={{ border: '1px solid #666', borderRadius: 8, padding: 14 }}>
+                        {/* Cover photo: the first uploaded image */}
+            {b.images?.length > 0 && (
+              <img
+                src={`http://localhost:5000${b.images[0]}`}
+                alt={b.title}
+                style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 6, marginBottom: 8 }}
+              />
+            )}
+
             <h3 style={{ marginTop: 0 }}>
   <Link to={`/boardings/${b._id}`}>{b.title}</Link>
 </h3>

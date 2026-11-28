@@ -27,6 +27,17 @@ export default function BoardingDetails() {
   return (
     <div style={{ maxWidth: 700, margin: '30px auto', padding: 20 }}>
       <h2>{boarding.title}</h2>
+            {/* All uploaded photos */}
+      <div style={{ marginBottom: 12 }}>
+        {boarding.images?.map((img) => (
+          <img
+            key={img}
+            src={`http://localhost:5000${img}`}
+            alt={boarding.title}
+            style={{ width: 200, height: 150, objectFit: 'cover', marginRight: 8, marginBottom: 8, borderRadius: 6 }}
+          />
+        ))}
+      </div>
       <p>{boarding.description}</p>
       <p>Address: {boarding.address}</p>
       <p>Price: Rs. {boarding.price} / month</p>
