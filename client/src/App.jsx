@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Boardings from './pages/Boardings';
 import OwnerDashboard from './pages/OwnerDashboard';
 import AdminBoardings from './pages/AdminBoardings';
+import BoardingDetails from './pages/BoardingDetails';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/boardings" element={<Boardings />} />
+      <Route path="/boardings/:id" element={<BoardingDetails />} />
 
       {/* Protected page: only logged-in users can see this */}
       <Route

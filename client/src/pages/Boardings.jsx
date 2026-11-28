@@ -95,7 +95,9 @@ export default function Boardings() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
         {boardings.map((b) => (
           <div key={b._id} style={{ border: '1px solid #666', borderRadius: 8, padding: 14 }}>
-            <h3 style={{ marginTop: 0 }}>{b.title}</h3>
+            <h3 style={{ marginTop: 0 }}>
+  <Link to={`/boardings/${b._id}`}>{b.title}</Link>
+</h3>
             <p>{b.address}</p>
             <p>Rs. {b.price} / month</p>
             <p>
