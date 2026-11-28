@@ -5,22 +5,26 @@ import { useAuth } from '../context/AuthContext';
 
 const API = 'http://localhost:5000/api/boardings';
 
+// Empty form values (used for adding and after saving)
+const emptyForm = {
+  title: '',
+  description: '',
+  price: '',
+  address: '',
+  gender: 'any',
+  rooms: 1,
+  distanceToUni: '',
+  facilities: '',
+};
+
 export default function OwnerDashboard() {
   const { user } = useAuth();
 
-  // The owner's boardings and the add-form values
   const [boardings, setBoardings] = useState([]);
   const [message, setMessage] = useState('');
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    price: '',
-    address: '',
-    gender: 'any',
-    rooms: 1,
-    distanceToUni: '',
-    facilities: '',
-  });
+  const [form, setForm] = useState(emptyForm);
+  // The id of the boarding being edited (null means we are adding a new one)
+  const [editingId, setEditingId] = useState(null);
 
   // Send the login token with every request
   const authHeader = { headers: { Authorization: `Bearer ${user.token}` } };
@@ -40,31 +44,57 @@ export default function OwnerDashboard() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Send the new boarding to the backend
+  // Fill the form with a boarding's values so it can be edited
+  const startEdit = (b) => {
+    setEditingId(b._id);
+    setMessage('');
+    setForm({
+      title: b.title,
+      description: b.description || '',
+      price: b.price,
+      address: b.address,
+      gender: b.gender,
+      rooms: b.rooms,
+      distanceToUni: b.distanceToUni || '',
+      facilities: (b.facilities || []).join(', '),
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Leave edit mode and clear the form
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+  };
+
+  // Add a new boarding, or save changes to the one being edited
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
+    const data = {
+      ...form,
+      price: Number(form.price),
+      rooms: Number(form.rooms),
+      distanceToUni: form.distanceToUni ? Number(form.distanceToUni) : undefined,
+      // "WiFi, Meals" becomes ['WiFi', 'Meals']
+      facilities: form.facilities
+        .split(',')
+        .map((f) => f.trim())
+        .filter((f) => f),
+    };
     try {
-      await axios.post(
-        API,
-        {
-          ...form,
-          price: Number(form.price),
-          rooms: Number(form.rooms),
-          distanceToUni: form.distanceToUni ? Number(form.distanceToUni) : undefined,
-          // "WiFi, Meals" becomes ['WiFi', 'Meals']
-          facilities: form.facilities
-            .split(',')
-            .map((f) => f.trim())
-            .filter((f) => f),
-        },
-        authHeader
-      );
-      setMessage('Boarding added. It is waiting for admin approval.');
-      setForm({ ...form, title: '', description: '', price: '', address: '', distanceToUni: '', facilities: '' });
+      if (editingId) {
+        await axios.put(`${API}/${editingId}`, data, authHeader);
+        setMessage('Boarding updated. It is waiting for admin approval again.');
+      } else {
+        await axios.post(API, data, authHeader);
+        setMessage('Boarding added. It is waiting for admin approval.');
+      }
+      setEditingId(null);
+      setForm(emptyForm);
       loadBoardings();
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Could not add boarding');
+      setMessage(err.response?.data?.message || 'Could not save boarding');
     }
   };
 
@@ -84,8 +114,8 @@ export default function OwnerDashboard() {
         <Link to="/home">Back to home</Link>
       </p>
 
-      {/* Add form */}
-      <h3>Add a new boarding</h3>
+      {/* Add / edit form */}
+      <h3>{editingId ? 'Edit boarding' : 'Add a new boarding'}</h3>
       {message && <p>{message}</p>}
       <form onSubmit={handleSubmit}>
         <input name="title" placeholder="Title" value={form.title} onChange={handleChange} required style={input} />
@@ -100,7 +130,14 @@ export default function OwnerDashboard() {
         <input name="rooms" type="number" min="1" placeholder="Rooms" value={form.rooms} onChange={handleChange} style={input} />
         <input name="distanceToUni" type="number" step="0.1" placeholder="Distance to university (km)" value={form.distanceToUni} onChange={handleChange} style={input} />
         <input name="facilities" placeholder="Facilities, separated by commas (WiFi, Meals)" value={form.facilities} onChange={handleChange} style={input} />
-        <button type="submit" style={{ padding: '8px 16px' }}>Add boarding</button>
+        <button type="submit" style={{ padding: '8px 16px', marginRight: 8 }}>
+          {editingId ? 'Update boarding' : 'Add boarding'}
+        </button>
+        {editingId && (
+          <button type="button" onClick={cancelEdit} style={{ padding: '8px 16px' }}>
+            Cancel
+          </button>
+        )}
       </form>
 
       {/* The owner's boardings */}
@@ -111,6 +148,9 @@ export default function OwnerDashboard() {
           <strong>{b.title}</strong> | Rs. {b.price} | {b.address}
           <p style={{ margin: '6px 0' }}>Status: {b.status}</p>
           {b.status === 'rejected' && <p>Reason: {b.rejectionReason}</p>}
+          <button onClick={() => startEdit(b)} style={{ marginRight: 8 }}>
+            Edit
+          </button>
           <button onClick={() => handleDelete(b._id)}>Delete</button>
         </div>
       ))}
